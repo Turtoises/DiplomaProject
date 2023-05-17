@@ -1,9 +1,8 @@
 package by.tms.tmsmyproject.entities;
 
-import by.tms.tmsmyproject.entities.enums.RoleUser;
+import by.tms.tmsmyproject.enums.RoleUser;
 import by.tms.tmsmyproject.utils.constants.ConstantsRegex;
 import by.tms.tmsmyproject.utils.validators.enums.ValueOfEnum;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
@@ -42,7 +41,6 @@ public class User extends AbstractEntity {
     private String surname;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonManagedReference
     @ToString.Exclude
     private List<Item> items;
 

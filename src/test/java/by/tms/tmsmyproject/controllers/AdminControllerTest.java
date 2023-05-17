@@ -2,9 +2,9 @@ package by.tms.tmsmyproject.controllers;
 
 import by.tms.tmsmyproject.config.MapperResolver;
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.dto.user.UserResponseGetDto;
-import by.tms.tmsmyproject.entities.mapers.UserMapper;
-import by.tms.tmsmyproject.entities.mapers.UserMapperImpl;
+import by.tms.tmsmyproject.dto.user.UserResponseGetDto;
+import by.tms.tmsmyproject.mapers.UserMapper;
+import by.tms.tmsmyproject.mapers.UserMapperImpl;
 import by.tms.tmsmyproject.services.AuthorService;
 import by.tms.tmsmyproject.services.BookService;
 import by.tms.tmsmyproject.services.ItemService;

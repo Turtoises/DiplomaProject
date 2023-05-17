@@ -1,6 +1,6 @@
 package by.tms.tmsmyproject.entities;
 
-import by.tms.tmsmyproject.entities.enums.GenreBook;
+import by.tms.tmsmyproject.enums.GenreBook;
 import by.tms.tmsmyproject.utils.validators.enums.ValueOfEnum;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
@@ -25,7 +25,6 @@ import java.util.Objects;
 @AllArgsConstructor
 public class Book extends AbstractEntity {
 
-    @Size(min = 1, max = 30, message = "The length of the name should be between 1 and 15")
     private String name;
     @Min(value = -2000, message = "Date incorrect")
     @Max(value = 2022, message = "Date incorrect")
@@ -36,7 +35,6 @@ public class Book extends AbstractEntity {
     @NotNull
     @ManyToOne
     @JoinColumn(name = "author_id", referencedColumnName = "id")
-    @JsonBackReference
     private Author author;
 
     @ToString.Exclude

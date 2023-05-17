@@ -16,8 +16,6 @@ public interface CrudService<E extends AbstractEntity> {
 
     E update(E entity);
 
-    List<E> getAll();
-
     Page<E> getAllPaginated(Pageable pageable);
 
 }

@@ -52,6 +52,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User update(User user) {
+        if(user.getId()==null){
+            user.setId(CurrentUserUtils.getId());
+        }
         if (user.getLogin() == null) {
             User updateUser = getById(user.getId());
             updateUser.setName(user.getName());
@@ -65,15 +68,6 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         return userRepository.saveAndFlush(user);
-    }
-
-    @Override
-    public List<User> getAll() {
-        List<User> userList = userRepository.findAll();
-        if (CollectionUtils.isEmpty(userList)) {
-            throw new EntityNotFoundException("There are no users to represent");
-        }
-        return userList;
     }
 
     @Override

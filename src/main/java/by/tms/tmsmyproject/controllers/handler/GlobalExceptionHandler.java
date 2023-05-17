@@ -55,7 +55,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         response.put("time", LocalDateTime.now().toString());
         return response;
     }
-
 }
 
 

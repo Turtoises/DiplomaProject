@@ -1,7 +1,7 @@
 package by.tms.tmsmyproject.listener;
 
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.enums.RoleUser;
+import by.tms.tmsmyproject.enums.RoleUser;
 import by.tms.tmsmyproject.services.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -17,7 +17,18 @@ public class CreateUserDefault {
     PasswordEncoder passwordEncoder;
 
     @EventListener(ApplicationReadyEvent.class)
-    public void createAdminIfNotExistsAfterStartup() {
+    public void createUserIfNotExistsAfterStartup() {
+        //create admin default
+        if (!userService.isUserWithRole(RoleUser.ROLE_ADMIN.name())) {
+            User user = User.builder()
+                    .login("admin")
+                    .password("admin")
+                    .role(RoleUser.ROLE_ADMIN.name())
+                    .build();
+            userService.create(user);
+        }
+
+        //create user default
         if (!userService.isUserLogin("user")) {
             User user = User.builder()
                     .login("user")

@@ -3,8 +3,8 @@ package by.tms.tmsmyproject.services.impl;
 import by.tms.tmsmyproject.entities.Author;
 import by.tms.tmsmyproject.entities.Book;
 import by.tms.tmsmyproject.entities.Item;
-import by.tms.tmsmyproject.entities.dto.book.BookRequestCreateDto;
-import by.tms.tmsmyproject.entities.mapers.BookMapper;
+import by.tms.tmsmyproject.dto.book.BookRequestCreateDto;
+import by.tms.tmsmyproject.mapers.BookMapper;
 import by.tms.tmsmyproject.exception.EntityNotCreateException;
 import by.tms.tmsmyproject.exception.EntityNotFoundException;
 import by.tms.tmsmyproject.repositories.BookRepository;
@@ -75,7 +75,7 @@ public class BookServiceImpl implements BookService {
         return bookRepository.saveAndFlush(book);
     }
 
-    @Transactional
+   /* @Transactional
     @Override
     public List<Book> getAll() {
         List<Book> bookList = bookRepository.findAll();
@@ -83,7 +83,7 @@ public class BookServiceImpl implements BookService {
             throw new EntityNotFoundException("There are no books to represent");
         }
         return bookList;
-    }
+    }*/
 
     @Override
     public Page<Book> getAllPaginated(Pageable pageable) {

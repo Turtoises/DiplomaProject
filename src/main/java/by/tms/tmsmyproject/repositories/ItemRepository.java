@@ -1,7 +1,7 @@
 package by.tms.tmsmyproject.repositories;
 
 import by.tms.tmsmyproject.entities.Item;
-import by.tms.tmsmyproject.entities.enums.StateItem;
+import by.tms.tmsmyproject.enums.StateItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

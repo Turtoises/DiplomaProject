@@ -1,6 +1,6 @@
 package by.tms.tmsmyproject.utils;
 
-import by.tms.tmsmyproject.entities.dto.book.BookResponseGetDto;
+import by.tms.tmsmyproject.dto.book.BookResponseGetDto;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;

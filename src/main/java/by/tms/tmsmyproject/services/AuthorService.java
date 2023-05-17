@@ -13,6 +13,8 @@ public interface AuthorService extends CrudService<Author> {
 
     List<Book> getAllAuthorBooksById(Long id);
 
+    List<Author> getAll();
+
     Book getBook(Long id, Integer number);
 
     Author getByNameAndSurname(Author author);

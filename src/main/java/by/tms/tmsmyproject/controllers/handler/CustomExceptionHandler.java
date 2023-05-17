@@ -5,6 +5,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 @ControllerAdvice
 public class CustomExceptionHandler {
 

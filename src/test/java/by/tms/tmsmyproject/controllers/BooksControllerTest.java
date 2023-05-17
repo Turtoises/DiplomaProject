@@ -1,20 +1,18 @@
 package by.tms.tmsmyproject.controllers;
 
 import by.tms.tmsmyproject.config.MapperResolver;
+import by.tms.tmsmyproject.dto.book.BookRequestCreateDto;
+import by.tms.tmsmyproject.dto.book.BookResponseGetDto;
 import by.tms.tmsmyproject.entities.Author;
 import by.tms.tmsmyproject.entities.Book;
-import by.tms.tmsmyproject.entities.dto.book.BookRequestCreateDto;
-import by.tms.tmsmyproject.entities.dto.book.BookResponseGetDto;
-import by.tms.tmsmyproject.entities.mapers.AuthorMapper;
-import by.tms.tmsmyproject.entities.mapers.AuthorMapperImpl;
-import by.tms.tmsmyproject.entities.mapers.BookMapper;
-import by.tms.tmsmyproject.entities.mapers.BookMapperImpl;
+import by.tms.tmsmyproject.mapers.AuthorMapper;
+import by.tms.tmsmyproject.mapers.AuthorMapperImpl;
+import by.tms.tmsmyproject.mapers.BookMapper;
+import by.tms.tmsmyproject.mapers.BookMapperImpl;
 import by.tms.tmsmyproject.services.AuthorService;
 import by.tms.tmsmyproject.services.BookService;
 import by.tms.tmsmyproject.services.ItemService;
 import by.tms.tmsmyproject.services.UserService;
-import by.tms.tmsmyproject.utils.validators.BookValidator;
-import io.florianlopes.spring.test.web.servlet.request.MockMvcRequestBuilderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
@@ -39,7 +37,6 @@ import java.util.Arrays;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,8 +54,6 @@ public class BooksControllerTest {
     private UserService userService;
     @MockBean
     private BookService bookService;
-    @MockBean
-    private BookValidator bookValidator;
     @Spy
     private BookMapper bookMapper = MapperResolver.getMapper(BookMapperImpl.class);
     @Spy
@@ -85,6 +80,8 @@ public class BooksControllerTest {
                 .birthYear(1920)
                 .deathYear(2012)
                 .build();
+
+        author.setBooks(Arrays.asList(book));
 
         book = Book.builder()
                 .id(1L)
@@ -130,14 +127,6 @@ public class BooksControllerTest {
         mvc.perform(get("/books/new?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/new"));
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void creatTest() throws Exception {
-        doNothing().when(bookValidator).validate(any(), any());
-        mvc.perform(MockMvcRequestBuilderUtils.postForm("/books", bookCreateDto))
-                .andExpect(status().is3xxRedirection());
     }
 
     @Test

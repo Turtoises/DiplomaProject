@@ -122,24 +122,6 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getAllTest() {
-        List<User> userList=new ArrayList<>(List.of(user));
-        when(userRepository.findAll()).thenReturn(userList);
-        List<User> actual = userService.getAll();
-        assertEquals(userList, actual);
-    }
-
-    @Test
-    void getAllShouldBeExceptionTest() {
-        when(userRepository.findAll()).thenReturn(new ArrayList<>());
-        EntityNotFoundException thrown = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            userService.getAll();
-        }, "");
-
-        assertEquals("There are no users to represent", thrown.getMessage());
-    }
-
-    @Test
     void isUserLoginTest() {
         when(userRepository.existsByLogin("user")).thenReturn(true);
         Boolean actual = userService.isUserLogin("user");

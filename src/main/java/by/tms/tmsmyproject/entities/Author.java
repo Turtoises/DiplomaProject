@@ -38,7 +38,6 @@ public class Author extends AbstractEntity {
     private Integer deathYear;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
-    @JsonManagedReference
     @ToString.Exclude
     private List<Book> books;
 

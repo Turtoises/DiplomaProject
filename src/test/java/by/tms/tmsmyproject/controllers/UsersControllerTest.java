@@ -1,17 +1,16 @@
 package by.tms.tmsmyproject.controllers;
 
 import by.tms.tmsmyproject.config.MapperResolver;
+import by.tms.tmsmyproject.dto.user.UserRequestUpdateAdminDto;
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.dto.user.UserRequestCreateDto;
-import by.tms.tmsmyproject.entities.dto.user.UserRequestUpdateDto;
-import by.tms.tmsmyproject.entities.dto.user.UserResponseGetDto;
-import by.tms.tmsmyproject.entities.mapers.UserMapper;
-import by.tms.tmsmyproject.entities.mapers.UserMapperImpl;
+import by.tms.tmsmyproject.dto.user.UserRequestCreateDto;
+import by.tms.tmsmyproject.dto.user.UserResponseGetDto;
+import by.tms.tmsmyproject.mapers.UserMapper;
+import by.tms.tmsmyproject.mapers.UserMapperImpl;
 import by.tms.tmsmyproject.services.AuthorService;
 import by.tms.tmsmyproject.services.BookService;
 import by.tms.tmsmyproject.services.ItemService;
 import by.tms.tmsmyproject.services.UserService;
-import by.tms.tmsmyproject.utils.validators.UserValidator;
 import io.florianlopes.spring.test.web.servlet.request.MockMvcRequestBuilderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -59,8 +57,6 @@ public class UsersControllerTest {
     private BookService bookService;
     @MockBean
     private ItemService itemService;
-    @MockBean
-    private UserValidator userValidator;
     @Spy
     private UserMapper userMapper = MapperResolver.getMapper(UserMapperImpl.class);
 
@@ -68,7 +64,7 @@ public class UsersControllerTest {
 
     private User user;
     private UserResponseGetDto userDto;
-    private UserRequestUpdateDto userUpdateDto;
+    private UserRequestUpdateAdminDto userUpdateDto;
     private UserRequestCreateDto userCreateDto;
 
     @BeforeEach

@@ -4,7 +4,7 @@ import by.tms.tmsmyproject.entities.Author;
 import by.tms.tmsmyproject.entities.Book;
 import by.tms.tmsmyproject.entities.Item;
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.enums.StateItem;
+import by.tms.tmsmyproject.enums.StateItem;
 import by.tms.tmsmyproject.exception.EntityNotCreateException;
 import by.tms.tmsmyproject.exception.EntityNotFoundException;
 import by.tms.tmsmyproject.exception.EntityNotUpdateException;
@@ -177,6 +177,4 @@ public class ItemServiceImplTest {
         Page<Item> page = itemService.findByState("ALL", pageRequest);
         assertEquals(pageAll.getContent(), page.getContent());
     }
-
-
 }

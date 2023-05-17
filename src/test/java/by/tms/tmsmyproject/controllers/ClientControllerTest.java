@@ -5,18 +5,20 @@ import by.tms.tmsmyproject.entities.Author;
 import by.tms.tmsmyproject.entities.Book;
 import by.tms.tmsmyproject.entities.Item;
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.dto.book.BookResponseGetDto;
-import by.tms.tmsmyproject.entities.dto.item.ItemResponseGetDto;
-import by.tms.tmsmyproject.entities.dto.user.UserRequestUpdateClientDto;
-import by.tms.tmsmyproject.entities.dto.user.UserResponseGetDto;
-import by.tms.tmsmyproject.entities.enums.StateItem;
-import by.tms.tmsmyproject.entities.mapers.*;
+import by.tms.tmsmyproject.dto.book.BookResponseGetDto;
+import by.tms.tmsmyproject.dto.item.ItemResponseGetDto;
+import by.tms.tmsmyproject.dto.user.UserRequestUpdateClientDto;
+import by.tms.tmsmyproject.dto.user.UserResponseGetDto;
+import by.tms.tmsmyproject.enums.StateItem;
+import by.tms.tmsmyproject.mapers.*;
+import by.tms.tmsmyproject.mapers.BookMapper;
+import by.tms.tmsmyproject.mapers.ItemMapper;
+import by.tms.tmsmyproject.mapers.UserMapper;
 import by.tms.tmsmyproject.services.AuthorService;
 import by.tms.tmsmyproject.services.BookService;
 import by.tms.tmsmyproject.services.ItemService;
 import by.tms.tmsmyproject.services.UserService;
 import by.tms.tmsmyproject.utils.currentuser.CurrentUserUtils;
-import by.tms.tmsmyproject.utils.validators.BookValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -60,8 +62,6 @@ public class ClientControllerTest {
     private UserService userService;
     @MockBean
     private BookService bookService;
-    @MockBean
-    private BookValidator bookValidator;
     @Spy
     private BookMapper bookMapper = MapperResolver.getMapper(BookMapperImpl.class);
     @Spy

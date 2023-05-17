@@ -3,7 +3,7 @@ package by.tms.tmsmyproject.services.impl;
 import by.tms.tmsmyproject.entities.Book;
 import by.tms.tmsmyproject.entities.Item;
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.enums.StateItem;
+import by.tms.tmsmyproject.enums.StateItem;
 import by.tms.tmsmyproject.exception.EntityNotCreateException;
 import by.tms.tmsmyproject.exception.EntityNotFoundException;
 import by.tms.tmsmyproject.exception.EntityNotUpdateException;
@@ -60,7 +60,7 @@ public class ItemServiceImpl implements ItemService {
             book.setItems(items);
             price=price+book.getPrice();
         }
-        item.setPrice(price);
+        item.setPrice(Math.round(price*10)/10.0);
         itemRepository.saveAndFlush(item);
         return item;
     }
@@ -69,11 +69,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Item update(Item newItem) {
         return itemRepository.saveAndFlush(newItem);
-    }
-
-    @Override
-    public List<Item> getAll() {
-        return itemRepository.findAll();
     }
 
     @Override

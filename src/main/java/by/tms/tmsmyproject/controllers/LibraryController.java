@@ -1,27 +1,18 @@
 package by.tms.tmsmyproject.controllers;
 
-import by.tms.tmsmyproject.entities.Author;
-import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.dto.author.AuthorResponseGetDto;
-import by.tms.tmsmyproject.entities.dto.book.BookResponseGetDto;
-import by.tms.tmsmyproject.entities.dto.user.UserRegistrationDto;
-import by.tms.tmsmyproject.entities.enums.GenreBook;
-import by.tms.tmsmyproject.entities.enums.RoleUser;
-import by.tms.tmsmyproject.entities.mapers.AuthorMapper;
-import by.tms.tmsmyproject.entities.mapers.BookMapper;
-import by.tms.tmsmyproject.entities.mapers.UserMapper;
-import by.tms.tmsmyproject.services.AuthorService;
-import by.tms.tmsmyproject.services.BookService;
-import by.tms.tmsmyproject.services.UserService;
+import by.tms.tmsmyproject.dto.PageRequestObject;
+import by.tms.tmsmyproject.dto.author.AuthorResponseGetDto;
+import by.tms.tmsmyproject.dto.book.BookResponseGetDto;
+import by.tms.tmsmyproject.dto.user.UserRegistrationDto;
+import by.tms.tmsmyproject.enums.GenreBook;
+import by.tms.tmsmyproject.enums.RoleUser;
+import by.tms.tmsmyproject.facade.LibraryFacade;
 import by.tms.tmsmyproject.utils.constants.ConstantsRegex;
-import by.tms.tmsmyproject.utils.constants.ControllerUtils;
+import by.tms.tmsmyproject.utils.constants.PageRequestObjectUtils;
 import by.tms.tmsmyproject.utils.currentuser.CurrentUserUtils;
-import by.tms.tmsmyproject.utils.validators.UserValidator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -32,20 +23,12 @@ import javax.validation.Valid;
 
 @Controller
 @AllArgsConstructor
-@SessionAttributes(names = {"cart", "itemsId"})
+/*@SessionAttributes(names = {"cart", "itemsId"})*/
 @RequestMapping("/library")
 @Slf4j
 public class LibraryController {
 
-    private final UserService userService;
-    private final UserMapper userMapper;
-    private final UserValidator userValidator;
-
-    private final BookService bookService;
-    private final BookMapper bookMapper;
-
-    private final AuthorService authorService;
-    private final AuthorMapper authorMapper;
+    private final LibraryFacade libraryFacade;
 
     private static String sizeSortFieldSortDirAsUri = "";
     private static String currentGenre;
@@ -82,117 +65,98 @@ public class LibraryController {
     @GetMapping("/login")
     public String login() {
         log.debug("user:{} login", CurrentUserUtils.getLogin());
+        libraryFacade.createEmptyCart();
         return "redirect:/library";
     }
 
     @GetMapping("/registration")
     public String registrationPage(@ModelAttribute("object") UserRegistrationDto userDto) {
+        userDto.setRole(RoleUser.ROLE_USER.name());
         return "library/registration";
     }
 
     @PostMapping("/registration")
     public String create(@ModelAttribute("object") @Valid UserRegistrationDto userDto, BindingResult bindingResult,
                          Model model) {
-        User user = userMapper.toEntity(userDto);
-        userValidator.validate(user, bindingResult);
-
         if (bindingResult.hasErrors()) {
             return "library/registration";
         }
-        user.setRole(RoleUser.ROLE_USER.name());
-        userService.create(user);
+        libraryFacade.createUser(userDto);
         model.addAttribute("registration", "success");
         return "index";
     }
 
     @GetMapping("/search/page/{pageNumber}")
     public String searchOnPage(@RequestParam(name = "text", required = false) String text,
-                               @PathVariable(name = "pageNumber") Integer pageNumber,
-                               @RequestParam(name = "size", defaultValue = "25") Integer size,
-                               @RequestParam(name = "sortField", defaultValue = "id") String sortField,
-                               @RequestParam(name = "sortDir", defaultValue = "ASC") String sortDir,
+                               PageRequestObject pageRequestObject,
                                Model model) {
-        if (sortField.equals("author_name")) {
-            sortField = "author.name";
-        } else if (sortField.equals("author_surname")) {
-            sortField = "author.surname";
+        if (pageRequestObject.getSortField().equals("author_name")) {
+            pageRequestObject.setSortField("author.name");
+        } else if (pageRequestObject.getSortField().equals("author_surname")) {
+            pageRequestObject.setSortField("author.surname");
         }
         searchText = text == null ? searchText : text;
-        PageRequest pageRequest = PageRequest.of(pageNumber - 1, size, Sort.Direction.valueOf(sortDir), sortField);
-        sizeSortFieldSortDirAsUri = ControllerUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
-        Page<BookResponseGetDto> page = bookService.searchBookByAuthorOrNameLikeText(searchText, pageRequest).map(bookMapper::toDtoCreate);
-        if (pageNumber > 1 && (page.getTotalPages() < pageNumber)) {
-            return "redirect:/library/search/page/" + (pageNumber - 1) + sizeSortFieldSortDirAsUri;
+        System.out.println(searchText);
+        sizeSortFieldSortDirAsUri = PageRequestObjectUtils.getPageParamForUri(model, pageRequestObject);
+        Page<BookResponseGetDto> page = libraryFacade.searchBookByAuthorOrNameLikeText(searchText, pageRequestObject);
+        if (page.getTotalPages() < pageRequestObject.getPageNumber()) {
+            return "redirect:/library/search/page/" + page.getTotalPages() + sizeSortFieldSortDirAsUri;
         }
         String path = "/library/search/page";
-        model.addAttribute("search", "The result of your search: '" + searchText + "'");
-        model.addAttribute("path", path);
-        model.addAttribute("genre", "all");
-        model.addAttribute("list", page);
+        model.addAttribute("search", "The result of your search: '" + searchText + "'")
+                .addAttribute("path", path)
+                .addAttribute("genre", "all")
+                .addAttribute("list", page);
         return "library/books-search-page";
     }
 
     @GetMapping("/books/page/{pageNumber}")
-    public String getBooksByGenre(@PathVariable("pageNumber") Integer pageNumber,
+    public String getBooksByGenre(PageRequestObject pageRequestObject,
                                   Model model,
-                                  @RequestParam(name = "genre", defaultValue = "null") String genre,
-                                  @RequestParam(name = "size", defaultValue = "25") Integer size,
-                                  @RequestParam(name = "sortField", defaultValue = "author_surname") String sortField,
-                                  @RequestParam(name = "sortDir", defaultValue = "ASC") String sortDir) {
+                                  @RequestParam(name = "genre", defaultValue = "null") String genre) {
         currentGenre = genre.equals("null") ? currentGenre : genre;
-        PageRequest pageRequest = PageRequest.of(pageNumber - 1, size, Sort.Direction.valueOf(sortDir), sortField);
-        sizeSortFieldSortDirAsUri = ControllerUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
-        Page<BookResponseGetDto> page = bookService.findBookByGenreOrAll(currentGenre, pageRequest).map(bookMapper::toDtoCreate);
-        if (pageNumber > 1 && (page.getTotalPages() < pageNumber)) {
-            return "redirect:/library/books/page/" + (pageNumber - 1) + sizeSortFieldSortDirAsUri;
+        sizeSortFieldSortDirAsUri = PageRequestObjectUtils.getPageParamForUri(model, pageRequestObject);
+        Page<BookResponseGetDto> page = libraryFacade.getBookByGenre(currentGenre, pageRequestObject);
+        if (page.getTotalPages() < pageRequestObject.getPageNumber()) {
+            return "redirect:/library/books/page/" + page.getTotalPages() + sizeSortFieldSortDirAsUri;
         }
-        model.addAttribute("genre", currentGenre);
-        model.addAttribute("list", page);
+        model.addAttribute("genre", currentGenre)
+                .addAttribute("list", page);
         return "library/books-by-genre-page";
     }
 
     @GetMapping("/authors/page/{pageNumber}")
-    public String getAuthorsByFirstLetterSurname(@PathVariable("pageNumber") Integer pageNumber,
+    public String getAuthorsByFirstLetterSurname(PageRequestObject pageRequestObject,
                                                  Model model,
-                                                 @RequestParam(name = "letter", defaultValue = "null") String letter,
-                                                 @RequestParam(name = "size", defaultValue = "25") Integer size,
-                                                 @RequestParam(name = "sortField", defaultValue = "surname") String sortField,
-                                                 @RequestParam(name = "sortDir", defaultValue = "ASC") String sortDir) {
+                                                 @RequestParam(name = "letter", defaultValue = "null") String letter) {
         currentLetter = letter.equals("null") ? currentLetter : letter;
-        PageRequest pageRequest = PageRequest.of(pageNumber - 1, size, Sort.Direction.valueOf(sortDir), sortField);
-        sizeSortFieldSortDirAsUri = ControllerUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
-        Page<AuthorResponseGetDto> page = authorService.findAuthorByFirstLetterSurnameOrAll(currentLetter, pageRequest).map(authorMapper::toDtoGet);
-        if (pageNumber > 1 && (page.getTotalPages() < pageNumber)) {
-            return "redirect:/library/authors/page/" + (pageNumber - 1) + sizeSortFieldSortDirAsUri;
+        sizeSortFieldSortDirAsUri = PageRequestObjectUtils.getPageParamForUri(model, pageRequestObject);
+        Page<AuthorResponseGetDto> page = libraryFacade.getAuthorByFirstLetterSurname(currentLetter, pageRequestObject);
+        if (page.getTotalPages() < pageRequestObject.getPageNumber()) {
+            return "redirect:/library/authors/page/" + page.getTotalPages() + sizeSortFieldSortDirAsUri;
         }
         String path = "/library/authors/page";
-        model.addAttribute("letter", currentLetter);
-        model.addAttribute("path", path);
-        model.addAttribute("list", page);
+        model.addAttribute("letter", currentLetter)
+                .addAttribute("path", path)
+                .addAttribute("list", page);
         return "library/authors-by-letter-page";
     }
 
     @GetMapping("/authors/{id}/books/page/{pageNumber}")
-    public String getBooksThisAuthor(Model model,
+    public String getBooksThisAuthor(PageRequestObject pageRequestObject,
                                      @PathVariable("id") Long id,
-                                     @PathVariable("pageNumber") Integer pageNumber,
-                                     @RequestParam(name = "size", defaultValue = "5") Integer size,
-                                     @RequestParam(name = "sortField", defaultValue = "name") String sortField,
-                                     @RequestParam(name = "sortDir", defaultValue = "ASC") String sortDir,
-                                     HttpServletRequest request) {
+                                     Model model, HttpServletRequest request) {
         pageForReturn = pageForReturn == null ? request.getHeader("Referer") : pageForReturn;
-        Author author = authorService.getById(id);
-        PageRequest pageRequest = PageRequest.of(pageNumber - 1, size, Sort.Direction.valueOf(sortDir), sortField);
-        sizeSortFieldSortDirAsUri = ControllerUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
-        var page = bookService.findBookByAuthor(author, pageRequest).map(bookMapper::toDtoCreate);
-        if (pageNumber > 1 && (page.getTotalPages() < pageNumber)) {
-            return "redirect:/library/authors/" + id + "/books/page" + (pageNumber - 1) + sizeSortFieldSortDirAsUri;
+        sizeSortFieldSortDirAsUri = PageRequestObjectUtils.getPageParamForUri(model, pageRequestObject);
+        Page<BookResponseGetDto> page = libraryFacade.getBookByAuthor(id, pageRequestObject);
+        if (page.getTotalPages() < pageRequestObject.getPageNumber()) {
+            return "redirect:/library/authors/" + id + "/books/page" + page.getTotalPages() + sizeSortFieldSortDirAsUri;
         }
         String path = "/library/authors/" + id + "/books/page";
-        model.addAttribute("letter", currentLetter);
-        model.addAttribute("path", path);
-        model.addAttribute("list", page);
-        model.addAttribute("author", authorMapper.toDtoUpdate(author));
+        model.addAttribute("letter", currentLetter)
+                .addAttribute("path", path)
+                .addAttribute("list", page)
+                .addAttribute("author", libraryFacade.getAuthorUpdateDto(id));
         return "library/books-this-author";
     }
 

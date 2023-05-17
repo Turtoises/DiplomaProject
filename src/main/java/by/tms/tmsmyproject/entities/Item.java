@@ -1,7 +1,6 @@
 package by.tms.tmsmyproject.entities;
 
-import by.tms.tmsmyproject.entities.enums.StateItem;
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import by.tms.tmsmyproject.enums.StateItem;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
@@ -44,7 +43,6 @@ public class Item extends AbstractEntity {
     @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @JsonBackReference
     private User user;
 
 

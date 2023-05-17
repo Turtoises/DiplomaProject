@@ -4,9 +4,9 @@ import by.tms.tmsmyproject.entities.Author;
 import by.tms.tmsmyproject.entities.Book;
 import by.tms.tmsmyproject.entities.Item;
 import by.tms.tmsmyproject.entities.User;
-import by.tms.tmsmyproject.entities.dto.book.BookRequestCreateDto;
-import by.tms.tmsmyproject.entities.enums.StateItem;
-import by.tms.tmsmyproject.entities.mapers.BookMapper;
+import by.tms.tmsmyproject.dto.book.BookRequestCreateDto;
+import by.tms.tmsmyproject.enums.StateItem;
+import by.tms.tmsmyproject.mapers.BookMapper;
 import by.tms.tmsmyproject.exception.EntityNotCreateException;
 import by.tms.tmsmyproject.exception.EntityNotFoundException;
 import by.tms.tmsmyproject.repositories.BookRepository;
@@ -162,23 +162,6 @@ public class BookServiceImplTest {
             bookService.update(bookAnother);
         }, "");
         assertEquals(String.format("The book name=%s by author with name=%s and surname=%s already exists.", book.getName(), author.getName(), author.getSurname()), thrown.getMessage());
-    }
-
-    @Test
-    void getAllTest() {
-        List<Book> bookList = new ArrayList<>(List.of(book));
-        when(bookRepository.findAll()).thenReturn(bookList);
-        List<Book> actual = bookService.getAll();
-        assertEquals(bookList, actual);
-    }
-
-    @Test
-    void getAllShouldBeExceptionTest() {
-        when(bookRepository.findAll()).thenReturn(new ArrayList<>());
-        EntityNotFoundException thrown = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            bookService.getAll();
-        }, "");
-        assertEquals("There are no books to represent", thrown.getMessage());
     }
 
     @ParameterizedTest

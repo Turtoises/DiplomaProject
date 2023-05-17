@@ -1,21 +1,21 @@
 package by.tms.tmsmyproject.controllers;
 
-import by.tms.tmsmyproject.classes.Password;
-import by.tms.tmsmyproject.entities.Item;
-import by.tms.tmsmyproject.entities.dto.book.BookResponseGetDto;
-import by.tms.tmsmyproject.entities.dto.item.ItemResponseGetDto;
-import by.tms.tmsmyproject.entities.dto.user.UserRequestUpdateClientDto;
-import by.tms.tmsmyproject.entities.enums.StateItem;
-import by.tms.tmsmyproject.entities.mapers.BookMapper;
-import by.tms.tmsmyproject.entities.mapers.ItemMapper;
-import by.tms.tmsmyproject.entities.mapers.UserMapper;
+import by.tms.tmsmyproject.dto.PageRequestObject;
+import by.tms.tmsmyproject.dto.Password;
+import by.tms.tmsmyproject.dto.book.BookResponseGetDto;
+import by.tms.tmsmyproject.dto.item.ItemResponseGetDto;
+import by.tms.tmsmyproject.dto.user.UserRequestUpdateClientDto;
+import by.tms.tmsmyproject.enums.StateItem;
+import by.tms.tmsmyproject.facade.LibraryFacade;
+import by.tms.tmsmyproject.mapers.BookMapper;
+import by.tms.tmsmyproject.mapers.ItemMapper;
+import by.tms.tmsmyproject.mapers.UserMapper;
 import by.tms.tmsmyproject.services.BookService;
 import by.tms.tmsmyproject.services.ItemService;
 import by.tms.tmsmyproject.services.UserService;
 import by.tms.tmsmyproject.utils.CartUtils;
-import by.tms.tmsmyproject.utils.constants.ControllerUtils;
+import by.tms.tmsmyproject.utils.constants.PageRequestObjectUtils;
 import by.tms.tmsmyproject.utils.currentuser.CurrentUserUtils;
-import by.tms.tmsmyproject.utils.validators.PasswordChangeValidator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,10 +38,12 @@ import java.util.List;
 @Controller
 @AllArgsConstructor
 @RequestMapping("/client")
-@SessionAttributes(names = {"cart", "itemsId"})
+/*@SessionAttributes(names = {"cart", "itemsId"})*/
 @PreAuthorize("hasRole('ROLE_USER')")
 @Slf4j
 public class ClientController {
+
+    private final LibraryFacade libraryFacade;
 
     private final UserService userService;
     private final UserMapper userMapper;
@@ -52,13 +54,10 @@ public class ClientController {
     private final ItemService itemService;
     private final ItemMapper itemMapper;
 
-    private final PasswordChangeValidator passwordChangeValidator;
-
     private final PasswordEncoder passwordEncoder;
 
     private static String sizeSortFieldSortDirAsUri = "";
     private static String currentState;
-    private static int currentPage = 1;
 
     @ModelAttribute("uri")
     public String getUri() {
@@ -70,7 +69,7 @@ public class ClientController {
         return "/client/item/page";
     }
 
-    @ModelAttribute("cart")
+    /*@ModelAttribute("cart")
     public List<BookResponseGetDto> createCart() {
         return new ArrayList<>();
     }
@@ -78,11 +77,11 @@ public class ClientController {
     @ModelAttribute("itemsId")
     public List<Long> createListIdItemsInCart() {
         return new ArrayList<>();
-    }
+    }*/
 
     @GetMapping
     public String clientPage(Model model) {
-        model.addAttribute("user", userMapper.toDto(CurrentUserUtils.getUser()));
+        model.addAttribute("user", libraryFacade.getCurrentUserDto());
         return "client/client-page";
     }
 
@@ -96,23 +95,17 @@ public class ClientController {
 
     @GetMapping("/edit/data")
     public String changeClientDataPage(Model model) {
-        model.addAttribute("object", userMapper.toClientUpdateDto(CurrentUserUtils.getUser()));
+        model.addAttribute("object", libraryFacade.getUserUpdateDtoForClient());
         return "client/edit-data";
     }
 
     @PatchMapping("/edit/data")
     public String changeClientData(@ModelAttribute("object") @Valid UserRequestUpdateClientDto userDto,
-                                   BindingResult bindingResult, @RequestParam("password") String password,
-                                   Errors errors, Model model) {
+                                   BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "client/edit-data";
         }
-        if (!passwordEncoder.matches(password, CurrentUserUtils.getUser().getPassword())) {
-            errors.rejectValue("password", "", "The password entered does not match the user");
-            return "client/edit-data";
-        }
-        userDto.setId(CurrentUserUtils.getId());
-        userService.update(userMapper.toEntity(userDto));
+        libraryFacade.updateUser(userDto);
         model.addAttribute("message", "The data has been successfully changed");
         return "client/edit-data";
     }
@@ -125,34 +118,35 @@ public class ClientController {
     @PatchMapping("/edit/password")
     public String changeClientPassword(@ModelAttribute("object") @Valid Password password, BindingResult bindingResult,
                                        Model model) {
-        passwordChangeValidator.validate(password, bindingResult);
 
         if (!bindingResult.hasErrors()) {
             model.addAttribute("message", "The password has been successfully changed");
-            userService.changePassword(password.getNewPassword());
+            libraryFacade.changeUserPassword(password);
         }
         return "client/edit-password";
     }
 
     @GetMapping("/books/{id}/cart")
     public String addBookToCart(@PathVariable("id") Long id,
-                                @ModelAttribute("cart") List<BookResponseGetDto> cart,
-                                @ModelAttribute("itemsId") List<Long> itemsId,
+                                /*@ModelAttribute("cart") List<BookResponseGetDto> cart,
+                                @ModelAttribute("itemsId") List<Long> itemsId,*/
                                 HttpServletRequest request) {
-        if (bookService.changeAmountDownward(id)) {
+        /*if (bookService.changeAmountDownward(id)) {
             cart.add(bookMapper.toDtoCreate(bookService.getById(id)));
             log.debug("user:{} add book with id:{} into cart", CurrentUserUtils.getLogin(), id);
             itemsId.add(id);
-        }
+        }*/
+        libraryFacade.addBookToCart(id);
         String referer = request.getHeader("Referer");
         return "redirect:" + referer;
     }
 
     @GetMapping("/cart")
-    public String getCart(@ModelAttribute("cart") List<BookResponseGetDto> cart,
+    public String getCart(/*@ModelAttribute("cart") List<BookResponseGetDto> cart,*/
                           Model model) {
-        model.addAttribute("list", cart);
-        model.addAttribute("sum", CartUtils.totalAmount(cart));
+       /* model.addAttribute("list", cart);
+        model.addAttribute("sum", CartUtils.totalAmount(cart));*/
+        libraryFacade.getCart(model);
         return "client/cart";
     }
 
@@ -174,13 +168,11 @@ public class ClientController {
     }
 
     @GetMapping("/cart/item")
-    public String formItemFromCart(@ModelAttribute("cart") List<BookResponseGetDto> cart,
-                                   @ModelAttribute("itemsId") List<Long> itemsId) {
-        Item item = new Item();
-        item.setBooks(bookMapper.toEntityList(cart));
-        itemService.create(item);
-        cart.clear();
-        itemsId.clear();
+    public String formItemFromCart(/*@ModelAttribute("cart") List<BookResponseGetDto> cart,
+                                   @ModelAttribute("itemsId") List<Long> itemsId*/) {
+        libraryFacade.createItem();
+  /*      cart.clear();
+        itemsId.clear();*/
         return "redirect:/client/item/page/1?state=CREATE";
     }
 
@@ -193,20 +185,14 @@ public class ClientController {
     }
 
     @GetMapping("/item/page/{pageNumber}")
-    public String getItemByState(@PathVariable("pageNumber") Integer pageNumber,
+    public String getItemByState(PageRequestObject pageRequestObject,
                                  Model model,
-                                 @RequestParam(name = "state", defaultValue = "null") String state,
-                                 @RequestParam(name = "size", defaultValue = "5") Integer size,
-                                 @RequestParam(name = "sortField", defaultValue = "dateCreate") String sortField,
-                                 @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir) {
+                                 @RequestParam(name = "state", defaultValue = "null") String state) {
         currentState = state.equals("null") ? currentState : state;
-        currentPage = pageNumber;
-        Long currentUserId = CurrentUserUtils.getId();
-        PageRequest pageRequest = PageRequest.of(pageNumber - 1, size, Sort.Direction.valueOf(sortDir), sortField);
-        sizeSortFieldSortDirAsUri = ControllerUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
-        Page<ItemResponseGetDto> page = itemService.findByStateAndUserId(currentState, currentUserId, pageRequest).map(itemMapper::toGetDto);
-        if (pageNumber > 1 && (page.getTotalPages() < pageNumber)) {
-            return "redirect:/client/item/page/" + (pageNumber - 1) + sizeSortFieldSortDirAsUri;
+        sizeSortFieldSortDirAsUri = PageRequestObjectUtils.getPageParamForUri(model, pageRequestObject);
+        Page<ItemResponseGetDto> page = libraryFacade.getItemByStateAndUser(currentState, CurrentUserUtils.getId(), pageRequestObject);
+        if (page.getTotalPages() < pageRequestObject.getPageNumber()) {
+            return "redirect:/client/item/page/" + page.getTotalPages() + sizeSortFieldSortDirAsUri;
         }
         model.addAttribute("list", page);
         return "client/items-by-state";
@@ -219,19 +205,17 @@ public class ClientController {
                                    @RequestParam(name = "size", defaultValue = "5") Integer size,
                                    @RequestParam(name = "sortField", defaultValue = "name") String sortField,
                                    @RequestParam(name = "sortDir", defaultValue = "ASC") String sortDir) {
-
-        currentPage = pageNumber;
         Long currentUserId = CurrentUserUtils.getId();
         PageRequest pageRequest = PageRequest.of(pageNumber - 1, size, Sort.Direction.valueOf(sortDir), sortField);
-        sizeSortFieldSortDirAsUri = ControllerUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
+        sizeSortFieldSortDirAsUri = PageRequestObjectUtils.getSizeSortFieldSortDirAsUri(model, pageNumber, sortField, sortDir, size);
         Page<BookResponseGetDto> page = bookService.findBookByItemAndUserId(id, currentUserId, pageRequest).map(bookMapper::toDtoCreate);
         if (pageNumber > 1 && (page.getTotalPages() < pageNumber)) {
             return "redirect:/client/item/" + id + "/books/page/" + (pageNumber - 1) + sizeSortFieldSortDirAsUri;
         }
         String path = "/client/item/" + id + "/books/page";
-        model.addAttribute("item", itemMapper.toGetDto(itemService.getById(id)));
-        model.addAttribute("path", path);
-        model.addAttribute("list", page);
+        model.addAttribute("item", itemMapper.toGetDto(itemService.getById(id)))
+                .addAttribute("path", path)
+                .addAttribute("list", page);
         return "client/books-in-this-item";
     }
 
